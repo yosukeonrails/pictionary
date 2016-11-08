@@ -8,14 +8,21 @@ app.use(express.static('public'));
 var server = http.Server(app);
 var io = socket_io(server);
 
-io.on('connection', function(socket){
+io.on('connection', function(socket) {
+  
 
-  socket.on('draw', function(position){
+    socket.on('draw', function(position) {
 
-       socket.broadcast.emit('draw', position);
+        socket.broadcast.emit('draw', position);
 
-     });
+    });
 
+    socket.on('guess', function(guess) {
+
+        socket.broadcast.emit('guess', guess);
+
+        console.log(guess);
+    });
 
 });
 
