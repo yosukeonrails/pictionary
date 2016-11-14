@@ -1,6 +1,10 @@
 var socket = io();
 var drawing;
 var drawer;
+var word;
+var same;
+
+var compare= {};
 
 var Words = [
     "word", "letter", "number", "person", "pen", "class", "people",
@@ -20,7 +24,6 @@ var Words = [
 
 var pictionary = function() {
 
-
     var canvas, context;
 
     var draw = function(position) {
@@ -37,10 +40,38 @@ var pictionary = function() {
     var displayGuess = function(guess) {
 
         $('#showGuess h4').text(guess);
-
         console.log(guess);
 
+        console.log( word + ' is availbale');
+
+        if(word){
+
+          compare.word= word;
+          compare.guess= guess;
+
+          console.log(compare);
+
+         socket.emit('evaluateGuess', compare);
+
+        }
+
     };
+
+    var displayResult = function(same) {
+
+        if (same === true) {
+
+            $('#wrong').hide();
+            $('#correct').show();
+
+        } else {
+
+            $('#correct').hide();
+            $('#wrong').show();
+
+        }
+    };
+
 
     var onKeyDown = function(event) {
         if (event.keyCode != 13) { // Enter
@@ -49,7 +80,7 @@ var pictionary = function() {
 
         var guess = guessBox.val();
         guessBox.val('');
-
+        compare.guess=guess;
         socket.emit('guess', guess);
 
         displayGuess(guess);
@@ -59,10 +90,12 @@ var pictionary = function() {
 
 
     guessBox = $('#guess input');
+
     guessBox.on('keydown', onKeyDown);
 
     socket.on('guess', displayGuess);
 
+    socket.on('displayResult', displayResult);
 
     canvas = $('canvas');
     context = canvas[0].getContext('2d');
@@ -84,16 +117,20 @@ var pictionary = function() {
 
     socket.on('drawer', function() {
 
-     drawer = true;
-     $('#showWord').show();
+        context.clearRect(0, 0, canvas[0].width, canvas[0].height);
+        drawer = true;
+        compare= {};
+        $('.guesserUi').hide();
 
-     
+        $('#showWord').show();
 
-      var word= Math.floor((Math.random() * Words.length) );
+        index = Math.floor((Math.random() * Words.length));
 
-      console.log('rrandom word is '+Words[word]);
+        word = Words[index];
+        // compare.word = word;
+        console.log('rrandom word is ' + word);
 
-      $('#showWord h4' ).text( Words[word]);
+        $('#showWord h4').text(word);
 
         console.log('user is a drawer');
 
@@ -101,12 +138,10 @@ var pictionary = function() {
     });
 
     socket.on('notDrawer', function() {
-
-     drawer = false;
+        context.clearRect(0, 0, canvas[0].width, canvas[0].height);
+        drawer = false;
+        $('#showWord').hide();
         $('.guesserUi').show();
-
-
-
 
     });
 
@@ -139,8 +174,8 @@ var pictionary = function() {
     });
 
     socket.on('draw', draw);
-    socket.on('reload', function(){
-      location.reload();
+    socket.on('reload', function() {
+        location.reload();
     });
 
 

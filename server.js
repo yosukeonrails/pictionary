@@ -11,25 +11,12 @@ var id;
 var drawer;
 var clients = {};
 var drawerId;
+var lastGuesser;
 
-var Words = [
-    "word", "letter", "number", "person", "pen", "class", "people",
-    "sound", "water", "side", "place", "man", "men", "woman", "women", "boy",
-    "girl", "year", "day", "week", "month", "name", "sentence", "line", "air",
-    "land", "home", "hand", "house", "picture", "animal", "mother", "father",
-    "brother", "sister", "world", "head", "page", "country", "question",
-    "answer", "school", "plant", "food", "sun", "state", "eye", "city", "tree",
-    "farm", "story", "sea", "night", "day", "life", "north", "south", "east",
-    "west", "child", "children", "example", "paper", "music", "river", "car",
-    "foot", "feet", "book", "science", "room", "friend", "idea", "fish",
-    "mountain", "horse", "watch", "color", "face", "wood", "list", "bird",
-    "body", "dog", "family", "song", "door", "product", "wind", "ship", "area",
-    "rock", "order", "fire", "problem", "piece", "top", "bottom", "king",
-    "space"
-];
 
 
 io.on('connection', function(socket) {
+
 
     clients[socket.id] = socket.id;
 
@@ -55,18 +42,49 @@ io.on('connection', function(socket) {
 
     });
 
+   socket.on('evaluateGuess', function(compare){
+
+
+
+        if(compare.guess===compare.word){
+
+            same= true;
+            socket.broadcast.emit('displayResult', same);
+
+
+            socket.broadcast.emit('notDrawer');
+            socket.emit('notDrawer');
+            io.to(lastGuesser).emit('drawer');
+
+
+        } else {
+
+          same= false;
+          socket.broadcast.emit('displayResult', same);
+        }
+
+   });
 
 
     socket.on('guess', function(guess) {
 
         socket.broadcast.emit('guess', guess);
 
+        lastGuesser=socket.id;
+
+
+        // socket.broadcast.emit('evaluateGuess', guess);
+        // socket.emit('evaluateGuess', guess);
+
         console.log(guess);
+
     });
+
+
 
     socket.on('disconnect', function() {
 
-        if(socket.id==drawerId){
+        if(socket.id == drawerId){
 
           console.log('drawer disconnected!!!! ');
 
